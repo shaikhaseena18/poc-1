@@ -13,24 +13,23 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Build & Unit Tests') {
             steps {
-                sh 'pip3 install -r requirements.txt'
+                sh 'mvn clean test'
             }
         }
 
-        stage('Unit Tests') {
+        stage('Package') {
             steps {
-                sh 'pytest'
+                sh 'mvn clean package'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
                 sh '''
-                sonar-scanner \
-                -Dsonar.projectKey=poc-1 \
-                -Dsonar.sources=. \
+                mvn sonar:sonar \
+                -Dsonar.projectKey=devsecops-app \
                 -Dsonar.host.url=http://52.66.208.22:9000 \
                 -Dsonar.login=$SONAR_TOKEN
                 '''
@@ -39,21 +38,21 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh 'docker build -t poc-python-app .'
+                sh 'docker build -t devsecops-app:latest .'
             }
         }
 
         stage('Trivy Scan') {
             steps {
-                sh 'trivy image poc-python-app'
+                sh 'trivy image --severity HIGH,CRITICAL devsecops-app:latest'
             }
         }
 
         stage('Deploy Container') {
             steps {
                 sh '''
-                docker rm -f poc-python-app || true
-                docker run -d --name poc-python-app -p 8080:8080 poc-python-app
+                docker rm -f devsecops-app || true
+                docker run -d --name devsecops-app -p 8080:8080 devsecops-app:latest
                 '''
             }
         }
