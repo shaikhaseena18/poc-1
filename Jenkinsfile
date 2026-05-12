@@ -1,49 +1,59 @@
 pipeline {
     agent any
 
+    environment {
+        SONAR_TOKEN = credentials('sonar-token')
+    }
+
     stages {
 
         stage('Checkout') {
             steps {
-                checkout scm
+                git 'https://github.com/shaikhaseena18/poc-1.git'
             }
         }
 
-        stage('Build & Test') {
+        stage('Install Dependencies') {
             steps {
-                sh 'mvn clean package'
+                sh 'pip3 install -r requirements.txt'
+            }
+        }
+
+        stage('Unit Tests') {
+            steps {
+                sh 'pytest'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                sh 'mvn sonar:sonar'
-            }
-        }
-
-        stage('Dependency Check') {
-            steps {
-                sh 'mvn org.owasp:dependency-check-maven:check'
+                sh '''
+                sonar-scanner \
+                -Dsonar.projectKey=poc-1 \
+                -Dsonar.sources=. \
+                -Dsonar.host.url=http://52.66.208.22:9000 \
+                -Dsonar.login=$SONAR_TOKEN
+                '''
             }
         }
 
         stage('Docker Build') {
             steps {
-                sh 'docker build -t devsecops-app:latest .'
+                sh 'docker build -t poc-python-app .'
             }
         }
 
         stage('Trivy Scan') {
             steps {
-                sh 'bash trivy-scan.sh'
+                sh 'trivy image poc-python-app'
             }
         }
 
         stage('Deploy Container') {
             steps {
                 sh '''
-                  docker run -d --name devsecops-app \
-                  -p 8080:8080 devsecops-app:latest
+                docker rm -f poc-python-app || true
+                docker run -d --name poc-python-app -p 8080:8080 poc-python-app
                 '''
             }
         }
