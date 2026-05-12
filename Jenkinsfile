@@ -7,12 +7,6 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/shaikhaseena18/poc-1.git'
-            }
-        }
-
         stage('Build & Unit Tests') {
             steps {
                 sh 'mvn clean test'
