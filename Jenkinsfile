@@ -36,11 +36,11 @@ pipeline {
             }
         }
 
-        trivy image \
-  --severity HIGH,CRITICAL \
-  --skip-java-db \
-  --scanners vuln \
-  devsecops-app:latest
+        stage('Trivy Scan') {
+    steps {
+        sh 'trivy image --severity HIGH,CRITICAL --skip-java-db --scanners vuln devsecops-app:latest'
+    }
+}
         stage('Deploy Container') {
             steps {
                 sh '''
