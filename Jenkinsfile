@@ -20,15 +20,15 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            steps {
-                sh '''
-                mvn sonar:sonar \
-                -Dsonar.projectKey=devsecops-app \
-                -Dsonar.host.url=http://52.66.208.22:9000 \
-                -Dsonar.login=$SONAR_TOKEN
-                '''
-            }
-        }
+    steps {
+        sh '''
+        mvn sonar:sonar \
+        -Dsonar.projectKey=devsecops-app \
+        -Dsonar.host.url=http://localhost:9000 \
+        -Dsonar.login=$SONAR_TOKEN
+        '''
+    }
+}
 
         stage('Docker Build') {
             steps {
